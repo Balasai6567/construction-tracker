@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Material Tracking System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .form-container {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+
+        .calculation-section {
+            background: linear-gradient(135deg, #f8f9ff, #e8f4f8);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px 0;
+        }
+
+        .calc-label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .calc-value {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .mismatch-section {
+            background: linear-gradient(135deg, #ffe8e8, #fff0f0);
+            border: 2px solid #ff6b6b;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .mismatch-alert {
+            color: #c0392b;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .camera-input {
+            position: relative;
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .camera-input:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(116, 185, 255, 0.3);
+        }
+
+        .camera-input input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .camera-label {
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .photo-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #55a3ff, #003d82);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(85, 163, 255, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .dimensions-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚛 Material Tracker</h1>
+            <p>Construction Material Delivery System</p>
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✅ Data submitted successfully! Entry saved to tracking system.
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            ❌ Submission failed. Please check your connection and try again.  
+        </div>
+
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            <p>Uploading data and photos...</p>
+        </div>
+
+        <form class="form-container" id="materialForm">
+            <div class="form-group">
+                <label for="deliveryDate">Date of Delivery <span class="required">*</span></label>
+                <input type="date" id="deliveryDate" name="deliveryDate" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="vehicleNo">Vehicle No <span class="required">*</span></label>
+                <input type="text" id="vehicleNo" name="vehicleNo" class="form-control" placeholder="e.g. AP09AB1234" required>
+            </div>
+
+            <div class="form-group">
+                <label for="driverName">Driver Name <span class="required">*</span></label>
+                <input type="text" id="driverName" name="driverName" class="form-control" placeholder="Enter driver name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="material">Material <span class="required">*</span></label>
+                <select id="material" name="material" class="form-control" required>
+                    <option value="">Select Material</option>
+                    <option value="Sand">Sand</option>
+                    <option value="Metal">Metal</option>
+                    <option value="Gravel">Gravel</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="senderUnits">Sender Declared Units <span class="required">*</span></label>
+                <input type="number" id="senderUnits" name="senderUnits" class="form-control" step="0.01" placeholder="Enter declared units" required>
+            </div>
+
+            <div class="form-group">
+                <label>Tipper Dimensions (ft) <span class="required">*</span></label>
+                <div class="dimensions-grid">
+                    <div>
+                        <label for="length">Length</label>
+                        <input type="number" id="length" name="length" class="form-control" step="0.1" placeholder="L" required>
+                    </div>
+                    <div>
+                        <label for="breadth">Breadth</label>
+                        <input type="number" id="breadth" name="breadth" class="form-control" step="0.1" placeholder="B" required>
+                    </div>
+                    <div>
+                        <label for="height">Height</label>
+                        <input type="number" id="height" name="height" class="form-control" step="0.1" placeholder="H" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calculation-section" id="calculationSection" style="display: none;">
+                <h3 style="margin-bottom: 15px; color: #333;">📊 Volume Calculations</h3>
+                <div class="calc-row">
+                    <span class="calc-label">CFT (L × B × H):</span>
+                    <span class="calc-value" id="cftValue">0.00</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Volume (m³):</span>
+                    <span class="calc-value" id="volumeValue">0.00</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Calculated Units:</span>
+                    <span class="calc-value" id="calculatedUnits">0.00</span>
+                </div>
+            </div>
+
+            <div class="mismatch-section" id="mismatchSection">
+                <div class="mismatch-alert">
+                    ⚠️ Mismatch Detected! Difference: <span id="mismatchDifference">0.00</span> units
+                </div>
+                <div class="form-group">
+                    <label for="mismatchReason">Reason for Mismatch <span class="required">*</span></label>
+                    <textarea id="mismatchReason" name="mismatchReason" class="form-control" rows="3" placeholder="Explain the reason for the mismatch..."></textarea>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="chainage">Chainage</label>
+                <input type="text" id="chainage" name="chainage" class="form-control" placeholder="e.g. 10+000">
+            </div>
+
+            <div class="form-group">
+                <label for="timeIn">Time In <span class="required">*</span></label>
+                <input type="time" id="timeIn" name="timeIn" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label for="remarks">Remarks</label>
+                <textarea id="remarks" name="remarks" class="form-control" rows="3" placeholder="Any additional notes..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Sender Receipt (Take Photo) <span class="required">*</span></label>
+                <div class="camera-input">
+                    <input type="file" id="senderReceipt" name="senderReceipt" accept="image/*" capture="environment" required>
+                    <div class="camera-label">
+                        📷 Tap to Capture Sender Receipt
+                    </div>
+                </div>
+                <img id="senderPreview" class="photo-preview" alt="Sender Receipt Preview">
+            </div>
+
+            <div class="form-group">
+                <label>Unloading Receipt (Take Photo) <span class="required">*</span></label>
+                <div class="camera-input">
+                    <input type="file" id="unloadingReceipt" name="unloadingReceipt" accept="image/*" capture="environment" required>
+                    <div class="camera-label">
+                        📷 Tap to Capture Unloading Receipt
+                    </div>
+                </div>
+                <img id="unloadingPreview" class="photo-preview" alt="Unloading Receipt Preview">
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                📤 Submit Material Entry
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('deliveryDate').valueAsDate = new Date();
+        
+        // Set current time as default
+        const now = new Date();
+        const timeString = now.getHours().toString().padStart(2, '0') + ':' + 
+                          now.getMinutes().toString().padStart(2, '0');
+        document.getElementById('timeIn').value = timeString;
+
+        // Photo preview functionality
+        function setupPhotoPreview(inputId, previewId) {
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+            
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate file size (5MB limit)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('File size must be less than 5MB');
+                        input.value = '';
+                        preview.style.display = 'none';
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        setupPhotoPreview('senderReceipt', 'senderPreview');
+        setupPhotoPreview('unloadingReceipt', 'unloadingPreview');
+
+        // Calculation logic
+        function calculateVolume() {
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            const breadth = parseFloat(document.getElementById('breadth').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const senderUnits = parseFloat(document.getElementById('senderUnits').value) || 0;
+
+            if (length > 0 && breadth > 0 && height > 0) {
+                // Calculate CFT
+                const cft = length * breadth * height;
+                
+                // Convert to m³
+                const volumeM3 = cft * 0.0283168;
+                
+                // Calculate units
+                const calculatedUnits = volumeM3 / 2.83;
+
+                // Update display
+                document.getElementById('cftValue').textContent = cft.toFixed(2);
+                document.getElementById('volumeValue').textContent = volumeM3.toFixed(2);
+                document.getElementById('calculatedUnits').textContent = calculatedUnits.toFixed(2);
+                
+                document.getElementById('calculationSection').style.display = 'block';
+
+                // Check for mismatch
+                if (senderUnits > 0) {
+                    const difference = Math.abs(calculatedUnits - senderUnits);
+                    const mismatchSection = document.getElementById('mismatchSection');
+                    const mismatchReason = document.getElementById('mismatchReason');
+                    
+                    if (difference > 0.01) { // More than 0.01 difference considered mismatch
+                        document.getElementById('mismatchDifference').textContent = difference.toFixed(2);
+                        mismatchSection.style.display = 'block';
+                        mismatchReason.required = true;
+                    } else {
+                        mismatchSection.style.display = 'none';
+                        mismatchReason.required = false;
+                        mismatchReason.value = '';
+                    }
+                }
+            } else {
+                document.getElementById('calculationSection').style.display = 'none';
+                document.getElementById('mismatchSection').style.display = 'none';
+            }
+        }
+
+        // Add event listeners for calculation
+        ['length', 'breadth', 'height', 'senderUnits'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculateVolume);
+        });
+
+        // Form submission
+        document.getElementById('materialForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            const formContainer = document.querySelector('.form-container');
+            
+            // Hide previous messages
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Show loading and disable form
+            formContainer.style.display = 'none';
+            loadingIndicator.style.display = 'block';
+            submitBtn.disabled = true;
+
+            try {
+                // Create FormData object
+                const formData = new FormData();
+                
+                // Add all form fields
+                const formElements = this.elements;
+                for (let element of formElements) {
+                    if (element.name && element.type !== 'file') {
+                        formData.append(element.name, element.value);
+                    }
+                }
+                
+                // Add calculated values
+                const length = parseFloat(document.getElementById('length').value) || 0;
+                const breadth = parseFloat(document.getElementById('breadth').value) || 0;
+                const height = parseFloat(document.getElementById('height').value) || 0;
+                const cft = length * breadth * height;
+                const volumeM3 = cft * 0.0283168;
+                const calculatedUnits = volumeM3 / 2.83;
+                const senderUnits = parseFloat(document.getElementById('senderUnits').value) || 0;
+                const difference = Math.abs(calculatedUnits - senderUnits);
+                
+                formData.append('cft', cft.toFixed(2));
+                formData.append('volumeM3', volumeM3.toFixed(2));
+                formData.append('calculatedUnits', calculatedUnits.toFixed(2));
+                formData.append('difference', difference.toFixed(2));
+                
+                // Add photo files
+                const senderReceipt = document.getElementById('senderReceipt').files[0];
+                const unloadingReceipt = document.getElementById('unloadingReceipt').files[0];
+                
+                if (senderReceipt) {
+                    formData.append('senderReceipt', senderReceipt);
+                }
+                if (unloadingReceipt) {
+                    formData.append('unloadingReceipt', unloadingReceipt);
+                }
+
+                // Replace this URL with your Google Apps Script Web App URL
+                const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        successMessage.style.display = 'block';
+                        this.reset();
+                        document.getElementById('calculationSection').style.display = 'none';
+                        document.getElementById('mismatchSection').style.display = 'none';
+                        document.getElementById('senderPreview').style.display = 'none';
+                        document.getElementById('unloadingPreview').style.display = 'none';
+                        
+                        // Reset date and time to current
+                        document.getElementById('deliveryDate').valueAsDate = new Date();
+                        document.getElementById('timeIn').value = timeString;
+                    } else {
+                        throw new Error(result.error || 'Submission failed');
+                    }
+                } else {
+                    throw new Error('Network error');
+                }
+                
+            } catch (error) {
+                console.error('Submission error:', error);
+                errorMessage.style.display = 'block';
+                formContainer.style.display = 'block';
+            } finally {
+                loadingIndicator.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Auto-hide messages after 5 seconds
+        function autoHideMessage(elementId) {
+            const element = document.getElementById(elementId);
+            if (element.style.display === 'block') {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                    if (elementId === 'successMessage') {
+                        document.querySelector('.form-container').style.display = 'block';
+                    }
+                }, 5000);
+            }
+        }
+
+        // Check for message visibility changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const target = mutation.target;
+                    if (target.id === 'successMessage' || target.id === 'errorMessage') {
+                        autoHideMessage(target.id);
+                    }
+                }
+            });
+        });
+
+        observer.observe(document.getElementById('successMessage'), { attributes: true });
+        observer.observe(document.getElementById('errorMessage'), { attributes: true });
+    </script>
+</body>
+</html>
